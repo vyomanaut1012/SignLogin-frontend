@@ -3,53 +3,54 @@ import React from "react";
 import Axios from "axios";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-// import { ToastContainer, toast } from "react-toastify";
 import toast, { Toaster } from 'react-hot-toast';
-// import { useEffect } from "react";
+import Cookies from 'universal-cookie';
+const cookies = new Cookies();
 
 const initialValues={
        email:'',
        password:'',
 }
-const validate=values=>{
+const validate=values =>{
     const errors={};
     if(!values.email){
-      errors.email="Required !!";
+        errors.email="Required !!";
     }else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)){
         errors.email="invalid email address !!";
     }
-
     if(!values.password){
        errors.password="Required !!";
     }
-
     return errors;
 }
 
-// Axios.get("http://localhost:5050/api/login",{
-//     responseType: "json",
-// })
-// .then((res)=>{
-//     console.log(res.data);
-// })
-
 function Logins(){
     const Navigate=useNavigate();
-    
-
-
     const onSubmit=(values,{resetForm})=>{
- 
-        // console.log("values",values);
-        Axios.post("https://signlogin-backend.onrender.com/api/login",{
+       Axios.post("https://posts-backend-two1.onrender.com/api/userdata",{
+          email:values.email,
+       },{
+        withCredentials:true,
+       })
+        Axios.post("https://posts-backend-two1.onrender.com/api/login",{
             email:values.email,
             password:values.password,
         },{
             withCredentials:true,
         }).then((res)=>{
             // console.log(res.data);
+            
+            const Email=values.email.split("@");
+            console.log(Email);
             if(res.data.message==="Login successful"){
-                 Navigate("/show");
+                 console.log("asli token",res.data.Token);
+                 cookies.set("email", Email[0],{
+                  expires:new Date(Date.now()+60*10000*10),// in millisecond
+                 });
+                 cookies.set( 'jwt', res.data.Token,{
+                  expires:new Date(Date.now()+60*10000*10),// in millisecond
+                 });
+                 Navigate("/totalpost");
             }else if(res.data.message==="NotRegistered"){
                  toast.error("email is not register", {
                     position: "top-center",
@@ -59,23 +60,15 @@ function Logins(){
                    position: "top-center",
                  });
            }
-
         })
-        resetForm();
-       
+        resetForm(); 
     }
-
 
     const formik=useFormik({
         initialValues,
         validate,
-        onSubmit
+        onSubmit,
     })
-     
-   
-
-  
-
     return (
         <>
         <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 lg:px-8">
@@ -87,8 +80,6 @@ function Logins(){
 
          <form onSubmit={formik.handleSubmit} className="mb-0 mt-6 space-y-4 rounded-lg p-4 shadow-lg sm:p-6 lg:p-8">
          <p className="text-center text-lg font-medium">Login into your account</p>
-
-
 
 {/* ******************************* */}
 <div>
@@ -162,9 +153,9 @@ function Logins(){
           {formik.touched.password && formik.errors.password ? (<div className=" mr-[350px] text-red-500">{formik.errors.password}</div>):null}
         </div>
       </div>
-{/* ************************ */}
+{/* *************************/}
 
-<button type="submit" className="block w-full rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white">Sign Up</button>
+<button type="submit" className="block w-full rounded-lg bg-indigo-600 px-5 py-3 text-sm font-medium text-white">Login</button>
 
 </form>
 
@@ -172,6 +163,10 @@ function Logins(){
         <p className="text-center text-sm text-gray-500">
           Create an Account
           <Link className="underline" to="/">Sign Up</Link>
+         </p>
+
+         <p className=" text-start text-base mt-2  no-underline text-indigo-600">
+          <Link to="/email">forget password</Link>
          </p>
 </div>
          
